@@ -81,8 +81,9 @@ export interface CotizacionData {
   espacios: EspacioCotizacion[];
 }
 
-export const TERMINOS_DEFAULT = `Método de pago: efectivo o transferencia. Abono inicial del 50%, saldo contra entrega verificado el funcionamiento.
-Tiempos de producción: enrollables y panel japonés 4 días hábiles, cortina contemporánea 10 días hábiles, Vertess y Doha 8 días hábiles.
+export const TERMINOS_DEFAULT = `Método de pago: efectivo o transferencia, en dos pagos. Abono inicial del 40% para iniciar producción. El 60% restante se paga antes de la instalación, en el lugar de la instalación.
+No se realizará la instalación hasta que el 60% restante haya sido pagado en su totalidad.
+Tiempo de entrega: entre 8 y 10 días hábiles, contados a partir de la fecha del abono inicial.
 Garantías: persianas 5 años, motores RF/WiFi y controles 2 años, cortinas contemporáneas 1 año, instalación y accesorios 1 año.
 No se realizan devoluciones de dinero una vez se solicite material o se inicie fabricación.
 Cambios en la red WiFi/router del cliente requieren nueva configuración con costo adicional, no cubierta por garantía.

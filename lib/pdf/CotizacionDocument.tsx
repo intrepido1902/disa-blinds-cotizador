@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   logo: {
-    width: 150,
+    width: 210,
     objectFit: "contain",
   },
   headerRight: {
