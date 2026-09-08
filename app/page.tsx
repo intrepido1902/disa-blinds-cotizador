@@ -7,7 +7,10 @@ import {
   EspacioCotizacion,
   ItemCotizacion,
   TERMINOS_DEFAULT,
+  TIPOS_ITEM,
+  TipoItem,
   WHATSAPP_DEFAULT,
+  calcularItem,
   calcularTotales,
   formatearCOP,
 } from "@/lib/types";
@@ -17,7 +20,24 @@ function nuevoId(): string {
 }
 
 function nuevoItem(): ItemCotizacion {
-  return { id: nuevoId(), referencia: "", cantidad: 1, area: "", precioTotal: 0 };
+  return calcularItem({
+    id: nuevoId(),
+    tipo: "tela",
+    referencia: "",
+    cantidad: 1,
+    ancho: "",
+    largo: "",
+    precioM2: 0,
+    precioUnitario: 0,
+    area: "",
+    precioTotal: 0,
+  });
+}
+
+function placeholderReferencia(tipo: TipoItem): string {
+  return tipo === "tela"
+    ? "Ej: velo tela cesto - confección al 2,8"
+    : "Ej: motor radiofrecuencia cortina contemporánea";
 }
 
 function nuevoEspacio(nombre = ""): EspacioCotizacion {
@@ -98,7 +118,7 @@ export default function Home() {
           ? {
               ...e,
               items: e.items.map((i) =>
-                i.id === itemId ? { ...i, ...cambios } : i
+                i.id === itemId ? calcularItem({ ...i, ...cambios }) : i
               ),
             }
           : e
@@ -306,21 +326,32 @@ export default function Home() {
                 </button>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[640px] text-sm">
-                  <thead>
-                    <tr className="border-b border-navy/10 text-left text-xs uppercase tracking-wide text-navy/50">
-                      <th className="py-2 pr-2 font-medium">Referencia / descripción</th>
-                      <th className="py-2 px-2 font-medium w-24">Cantidad</th>
-                      <th className="py-2 px-2 font-medium w-28">Área (m²)</th>
-                      <th className="py-2 px-2 font-medium w-40">Precio total (COP)</th>
-                      <th className="py-2 pl-2 w-10"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {espacio.items.map((item) => (
-                      <tr key={item.id} className="border-b border-navy/5">
-                        <td className="py-2 pr-2">
+              <div className="space-y-3">
+                {espacio.items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="rounded-md border border-navy/10 bg-cream/40 p-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+                        <Campo label="Tipo de ítem">
+                          <select
+                            value={item.tipo}
+                            onChange={(e) =>
+                              actualizarItem(espacio.id, item.id, {
+                                tipo: e.target.value as TipoItem,
+                              })
+                            }
+                            className="input"
+                          >
+                            {TIPOS_ITEM.map((t) => (
+                              <option key={t.value} value={t.value}>
+                                {t.label}
+                              </option>
+                            ))}
+                          </select>
+                        </Campo>
+                        <Campo label="Descripción / referencia">
                           <input
                             type="text"
                             value={item.referencia}
@@ -329,11 +360,67 @@ export default function Home() {
                                 referencia: e.target.value,
                               })
                             }
-                            placeholder="Ej: velo tela cesto - confección al 2,8"
+                            placeholder={placeholderReferencia(item.tipo)}
                             className="input"
                           />
-                        </td>
-                        <td className="py-2 px-2">
+                        </Campo>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => eliminarItem(espacio.id, item.id)}
+                        className="mt-6 shrink-0 text-navy/40 hover:text-red-600"
+                        aria-label="Eliminar ítem"
+                        title="Eliminar ítem"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {item.tipo === "tela" ? (
+                      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                        <Campo label="Ancho (m)">
+                          <input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            value={item.ancho}
+                            onChange={(e) =>
+                              actualizarItem(espacio.id, item.id, {
+                                ancho: e.target.value,
+                              })
+                            }
+                            className="input"
+                          />
+                        </Campo>
+                        <Campo label="Largo (m)">
+                          <input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            value={item.largo}
+                            onChange={(e) =>
+                              actualizarItem(espacio.id, item.id, {
+                                largo: e.target.value,
+                              })
+                            }
+                            className="input"
+                          />
+                        </Campo>
+                        <Campo label="Precio por m² (COP)">
+                          <input
+                            type="number"
+                            min={0}
+                            step="1"
+                            value={item.precioM2}
+                            onChange={(e) =>
+                              actualizarItem(espacio.id, item.id, {
+                                precioM2: Number(e.target.value),
+                              })
+                            }
+                            className="input"
+                          />
+                        </Campo>
+                        <Campo label="Cantidad">
                           <input
                             type="number"
                             min={0}
@@ -346,51 +433,57 @@ export default function Home() {
                             }
                             className="input"
                           />
-                        </td>
-                        <td className="py-2 px-2">
-                          <input
-                            type="number"
-                            min={0}
-                            step="0.01"
-                            value={item.area}
-                            onChange={(e) =>
-                              actualizarItem(espacio.id, item.id, {
-                                area: e.target.value,
-                              })
-                            }
-                            placeholder="—"
-                            className="input"
-                          />
-                        </td>
-                        <td className="py-2 px-2">
+                        </Campo>
+                        <Campo label="Área">
+                          <div className="input flex cursor-not-allowed items-center bg-navy/5 text-navy/60">
+                            Área: {item.area !== "" ? item.area : "0.00"} m²
+                          </div>
+                        </Campo>
+                        <Campo label="Precio total del ítem">
+                          <div className="input flex cursor-not-allowed items-center bg-navy/5 font-medium text-navy/70">
+                            {formatearCOP(item.precioTotal || 0)}
+                          </div>
+                        </Campo>
+                      </div>
+                    ) : (
+                      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        <Campo label="Cantidad">
                           <input
                             type="number"
                             min={0}
                             step="1"
-                            value={item.precioTotal}
+                            value={item.cantidad}
                             onChange={(e) =>
                               actualizarItem(espacio.id, item.id, {
-                                precioTotal: Number(e.target.value),
+                                cantidad: Number(e.target.value),
                               })
                             }
                             className="input"
                           />
-                        </td>
-                        <td className="py-2 pl-2 text-center">
-                          <button
-                            type="button"
-                            onClick={() => eliminarItem(espacio.id, item.id)}
-                            className="text-navy/40 hover:text-red-600"
-                            aria-label="Eliminar ítem"
-                            title="Eliminar ítem"
-                          >
-                            ✕
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        </Campo>
+                        <Campo label="Precio unitario (COP)">
+                          <input
+                            type="number"
+                            min={0}
+                            step="1"
+                            value={item.precioUnitario}
+                            onChange={(e) =>
+                              actualizarItem(espacio.id, item.id, {
+                                precioUnitario: Number(e.target.value),
+                              })
+                            }
+                            className="input"
+                          />
+                        </Campo>
+                        <Campo label="Precio total del ítem">
+                          <div className="input flex cursor-not-allowed items-center bg-navy/5 font-medium text-navy/70">
+                            {formatearCOP(item.precioTotal || 0)}
+                          </div>
+                        </Campo>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
 
               <button
