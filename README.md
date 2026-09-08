@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cotizador Disa Blinds
 
-## Getting Started
+Sistema web para generar cotizaciones en PDF para Disa Blinds (cortinas y persianas de lujo). Sin base de datos: el formulario se llena en el navegador y el PDF se genera al vuelo en el servidor.
 
-First, run the development server:
+**Stack:** Next.js 14 (App Router) · TypeScript · Tailwind CSS v4 · [@react-pdf/renderer](https://react-pdf.org/)
+
+## Correr en local
 
 ```bash
+npm install   # solo la primera vez
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000), llena la cotización y haz clic en **Generar PDF**.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Build de producción
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+`npm run build` corre el chequeo de tipos y ESLint; si pasa sin errores, el proyecto está listo para desplegar.
 
-To learn more about Next.js, take a look at the following resources:
+## Estructura relevante
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `app/page.tsx` — formulario (datos generales, espacios/ítems dinámicos, totales en vivo).
+- `app/api/cotizacion/route.ts` — API route que genera el PDF con `@react-pdf/renderer` (runtime Node.js) y lo devuelve como archivo descargable.
+- `lib/pdf/CotizacionDocument.tsx` — plantilla del PDF (encabezado con logo, tabla por espacios, totales, observaciones, términos y condiciones).
+- `lib/types.ts` — tipos compartidos, cálculo de totales, formato de moneda COP y texto por defecto de términos y condiciones.
+- `public/logo.jpeg` — logo de Disa Blinds usado en la web y en el PDF.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Notas
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- El WhatsApp de contacto por defecto está en `lib/types.ts` (`WHATSAPP_DEFAULT`) — actualízalo con el número real.
+- No hay autenticación ni persistencia: cada cotización vive solo en el formulario hasta que se descarga el PDF.
