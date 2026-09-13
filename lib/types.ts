@@ -32,6 +32,12 @@ export interface ItemCotizacion {
   area: string;
   /** Calculado automáticamente según el tipo de ítem. */
   precioTotal: number;
+  /**
+   * Costo interno total de este ítem, en COP. Uso exclusivamente interno
+   * para el resumen de margen del cotizador — NUNCA se muestra ni se envía
+   * al PDF.
+   */
+  nuestroPrecio: number;
 }
 
 /**
@@ -73,6 +79,8 @@ export interface CotizacionData {
   ciudad: string;
   fecha: string;
   cliente: string;
+  telefono: string;
+  direccion: string;
   asesor: string;
   whatsapp: string;
   descuentoPct: number;
@@ -103,6 +111,25 @@ export function calcularTotales(data: Pick<CotizacionData, "espacios" | "descuen
   const descuento = subtotal * ((data.descuentoPct || 0) / 100);
   const total = subtotal - descuento;
   return { subtotal, descuento, total };
+}
+
+/**
+ * Resumen de margen para uso EXCLUSIVAMENTE interno (pantalla del cotizador).
+ * No debe consumirse desde el PDF bajo ninguna circunstancia.
+ */
+export function calcularMargenInterno(
+  data: Pick<CotizacionData, "espacios" | "descuentoPct">
+) {
+  const costoTotal = data.espacios.reduce(
+    (accEspacio, espacio) =>
+      accEspacio +
+      espacio.items.reduce((accItem, item) => accItem + (item.nuestroPrecio || 0), 0),
+    0
+  );
+  const { total: precioVentaTotal } = calcularTotales(data);
+  const margen = precioVentaTotal - costoTotal;
+  const margenPct = precioVentaTotal > 0 ? (margen / precioVentaTotal) * 100 : 0;
+  return { costoTotal, precioVentaTotal, margen, margenPct };
 }
 
 export function formatearCOP(valor: number): string {

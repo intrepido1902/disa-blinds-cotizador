@@ -11,6 +11,7 @@ import {
   TipoItem,
   WHATSAPP_DEFAULT,
   calcularItem,
+  calcularMargenInterno,
   calcularTotales,
   formatearCOP,
 } from "@/lib/types";
@@ -31,6 +32,7 @@ function nuevoItem(): ItemCotizacion {
     precioUnitario: 0,
     area: "",
     precioTotal: 0,
+    nuestroPrecio: 0,
   });
 }
 
@@ -56,6 +58,8 @@ export default function Home() {
   const [ciudad, setCiudad] = useState("Bogotá");
   const [fecha, setFecha] = useState("");
   const [cliente, setCliente] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [direccion, setDireccion] = useState("");
   const [asesor, setAsesor] = useState("");
   const [whatsapp, setWhatsapp] = useState(WHATSAPP_DEFAULT);
   const [descuentoPct, setDescuentoPct] = useState(0);
@@ -74,6 +78,10 @@ export default function Home() {
   }, []);
 
   const { subtotal, descuento, total } = calcularTotales({ espacios, descuentoPct });
+  const { costoTotal, precioVentaTotal, margen, margenPct } = calcularMargenInterno({
+    espacios,
+    descuentoPct,
+  });
 
   function agregarEspacio() {
     setEspacios((prev) => [...prev, nuevoEspacio("")]);
@@ -139,6 +147,8 @@ export default function Home() {
       ciudad,
       fecha,
       cliente,
+      telefono,
+      direccion,
       asesor,
       whatsapp,
       descuentoPct,
@@ -237,6 +247,24 @@ export default function Home() {
                 value={cliente}
                 onChange={(e) => setCliente(e.target.value)}
                 placeholder="Nombre del cliente"
+                className="input"
+              />
+            </Campo>
+            <Campo label="Teléfono">
+              <input
+                type="text"
+                value={telefono}
+                onChange={(e) => setTelefono(e.target.value)}
+                placeholder="Teléfono del cliente"
+                className="input"
+              />
+            </Campo>
+            <Campo label="Dirección">
+              <input
+                type="text"
+                value={direccion}
+                onChange={(e) => setDireccion(e.target.value)}
+                placeholder="Dirección de instalación"
                 className="input"
               />
             </Campo>
@@ -482,6 +510,29 @@ export default function Home() {
                         </Campo>
                       </div>
                     )}
+
+                    {/* Costo interno — solo para el resumen de margen en pantalla, nunca va al PDF */}
+                    <div className="mt-3 flex flex-wrap items-end gap-3 rounded-md border border-dashed border-amber-400 bg-amber-50 p-3">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                        🔒 Solo interno
+                      </span>
+                      <div className="w-48">
+                        <Campo label="Nuestro precio (costo, COP)">
+                          <input
+                            type="number"
+                            min={0}
+                            step="1"
+                            value={item.nuestroPrecio}
+                            onChange={(e) =>
+                              actualizarItem(espacio.id, item.id, {
+                                nuestroPrecio: Number(e.target.value),
+                              })
+                            }
+                            className="input border-amber-300 bg-white focus:border-amber-500"
+                          />
+                        </Campo>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -539,6 +590,54 @@ export default function Home() {
           {error && (
             <p className="mt-3 text-sm text-red-300">{error}</p>
           )}
+        </section>
+
+        {/*
+          Resumen interno de margen — SOLO para uso interno del cotizador.
+          No se envía a la API de generación de PDF ni se referencia en
+          CotizacionDocument, así que bajo ninguna circunstancia aparece
+          en el PDF entregado al cliente.
+        */}
+        <section className="rounded-lg border-2 border-dashed border-amber-500 bg-amber-50 p-6 shadow-sm">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="text-lg">🔒</span>
+            <h2 className="font-serif text-lg font-semibold text-amber-900">
+              Resumen interno de margen
+            </h2>
+          </div>
+          <p className="mb-4 text-xs font-medium uppercase tracking-wide text-amber-700">
+            Solo visible aquí — nunca se incluye en el PDF
+          </p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-amber-700">
+                Nuestro costo total
+              </p>
+              <p className="text-lg font-semibold text-amber-950">
+                {formatearCOP(costoTotal)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-amber-700">
+                Precio de venta total
+              </p>
+              <p className="text-lg font-semibold text-amber-950">
+                {formatearCOP(precioVentaTotal)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-amber-700">Margen</p>
+              <p className="text-lg font-semibold text-amber-950">
+                {formatearCOP(margen)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-amber-700">Margen %</p>
+              <p className="text-lg font-semibold text-amber-950">
+                {margenPct.toFixed(1)}%
+              </p>
+            </div>
+          </div>
         </section>
       </div>
     </main>
